@@ -95,13 +95,9 @@ namespace ImageResizer.Plugins.MatteRemoval
                     var p = x * ByteSize;
                     var a = row[p + 3];
 
-                    //No need to process transparent pixels
-                    if (a == 0) continue;
-
-                    //No need to process opaque pixels
+                    if (a == byte.MinValue) continue;
                     if (a == byte.MaxValue) continue;
 
-                    //Declare colors when needed
                     var b = row[p];
                     var g = row[p + 1];
                     var r = row[p + 2];
