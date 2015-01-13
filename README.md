@@ -1,5 +1,5 @@
-ImageResizer.Plugins.GradientOverlay
-====================================
+ImageResizer.Plugins.MatteRemoval
+=================================
 
 ### Parameters
 
