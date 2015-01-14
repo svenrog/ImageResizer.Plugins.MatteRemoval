@@ -65,25 +65,25 @@ namespace ImageResizer.Plugins.MatteRemoval
 
         protected Settings GetSettings(ImageState state)
         {
-            int amount = 0;
-           
-            if (!int.TryParse(state.settings["matte"], out amount))
-                return null;
+            int amount = NameValueCollectionExtensions.Get(state.settings, "matte", new int?(0)) ?? 0;
 
+            if (amount == 0) return null;
             if (amount > 100) return null;
-
+            if (amount < -100) return null;
+            
             var settings = new Settings
             {
-                Amount = (byte)amount
+                Amount = amount
             };
 
             return settings;
         }
 
-        private const int ByteSize = 4;
-
         private unsafe void ApplyMatteTransform(BitmapData bitmap, Settings settings)
         {
+            const int byteSize = 4;
+            const double invByte = 1.0 / byte.MaxValue;
+
             float amount = settings.Amount * 0.01f;
 
             for (var y = 0; y < bitmap.Height; y++)
@@ -92,7 +92,7 @@ namespace ImageResizer.Plugins.MatteRemoval
 
                 for (var x = 0; x < bitmap.Width; x++)
                 {
-                    var p = x * ByteSize;
+                    var p = x * byteSize;
                     var a = row[p + 3];
 
                     if (a == byte.MinValue) continue;
@@ -103,16 +103,18 @@ namespace ImageResizer.Plugins.MatteRemoval
                     var r = row[p + 2];
 
                     var hsl = ColorExtensions.RgbToHsl(r, g, b);
-                    var l = hsl.L * amount;
-                    
-                    if (l < 0) l = 0;
-                    if (l > 1) l = 1;
+
+                    var z = amount * (1.0 - a * invByte);
+                    var l = hsl.L + z;
+
+                    if (l < 0.0) l = 0.0;
+                    if (l > 1.0) l = 1.0;
 
                     var rgb = ColorExtensions.HslToRgb(hsl.H, hsl.S, l);
 
-                    row[p]     = rgb.R;    //Blue  0-255
+                    row[p]     = rgb.B;    //Blue  0-255
                     row[p + 1] = rgb.G;    //Green 0-255
-                    row[p + 2] = rgb.B;    //Red   0-255
+                    row[p + 2] = rgb.R;    //Red   0-255
                 }
             }
         }      

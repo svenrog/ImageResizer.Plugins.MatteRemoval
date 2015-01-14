@@ -5,6 +5,6 @@ namespace ImageResizer.Plugins.MatteRemoval
 {
     public class Settings 
     {
-        public byte Amount { get; set; }
+        public int Amount { get; set; }
     }
 }
